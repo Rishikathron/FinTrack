@@ -19,4 +19,5 @@
       <Property Name="TargetFrameworkMoniker" Value="&quot;.NETFramework,Version%3Dv4.0&quot;" />
       <Property Name="VWDPort" Value="&quot;63100&quot;" />
     </Properties>
-  </Project><Project Path="FinTrack/FinTrack.csproj" /><Folder Name="/Solution Items/"><File Path="README.md" /><File Path="COPILOT_CHANGES.md" /></Folder></Solution>
+  </Project>
+  <Project Path="FinTrack.Core/FinTrack.Core.csproj" /><Project Path="FinTrack/FinTrack.csproj" /><Folder Name="/Solution Items/"><File Path="README.md" /><File Path="COPILOT_CHANGES.md" /></Folder></Solution>
