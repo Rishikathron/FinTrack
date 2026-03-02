@@ -8,35 +8,269 @@
   <p class="error">{{ err }}</p>
 }
 
+@if (successMessage(); as msg) {
+  <p class="success">{{ msg }}</p>
+}
+
 @if (!loading() && assets().length === 0) {
   <div class="card empty">
-    <p>No assets yet. <a routerLink="/add-asset">Add your first asset →</a></p>
+    <p>No assets yet. Use the ＋ button below to add your first asset.</p>
   </div>
 }
 
-@if (assets().length > 0) {
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Value</th>
-          <th>Added</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (asset of assets(); track asset.id) {
-          <tr>
-            <td data-label="Type">{{ asset.type }}</td>
-            <td data-label="Value">{{ displayValue(asset) }}</td>
-            <td data-label="Added">{{ asset.createdAt | date:'mediumDate' }}</td>
-            <td>
-              <button class="btn btn-danger" (click)="deleteAsset(asset.id)">Delete</button>
-            </td>
-          </tr>
+@for (cat of categories(); track cat.type) {
+  <div class="asset-group card">
+    <!-- Group Header -->
+    <div class="group-header">
+      <span class="group-icon">{{ cat.icon }}</span>
+      <span class="group-label">{{ cat.label }}</span>
+      @if (cat.assets.length > 0) {
+        <span class="group-summary">{{ groupSummary(cat.assets, cat.type) }}</span>
+      }
+      <button class="add-toggle" (click)="toggleAdd(cat.type)" [attr.aria-label]="isAdding(cat.type) ? 'Close' : 'Add ' + cat.label">
+        {{ isAdding(cat.type) ? '✕' : '＋' }}
+      </button>
+    </div>
+
+    <!-- Inline Add Form -->
+    @if (isAdding(cat.type)) {
+      <div class="add-form-row">
+        @if (cat.type !== 'FD') {
+          <!-- Metal add form -->
+          <div class="add-field">
+            <label>Grams</label>
+            <input type="number" [ngModel]="addQuantity()" (ngModelChange)="addQuantity.set($event)" min="0.01" step="0.01" placeholder="e.g. 8" />
+          </div>
+          <div class="add-field">
+            <label>Rate (₹/g)</label>
+            <input type="number" [ngModel]="addRate()" (ngModelChange)="addRate.set($event)" min="0" step="0.01" placeholder="e.g. 5500" />
+          </div>
+          <div class="add-field">
+            <label>Purchase Date</label>
+            <input type="date" [ngModel]="addDate()" (ngModelChange)="addDate.set($event)" />
+          </div>
+        } @else {
+          <!-- FD add form -->
+          <div class="add-field">
+            <label>Principal (₹)</label>
+            <input type="number" [ngModel]="addAmount()" (ngModelChange)="addAmount.set($event)" min="1" step="1" placeholder="e.g. 100000" />
+          </div>
+          <div class="add-field">
+            <label>Interest Rate (%)</label>
+            <input type="number" [ngModel]="addInterestRate()" (ngModelChange)="addInterestRate.set($event)" min="0" max="100" step="0.1" placeholder="e.g. 7.5" />
+          </div>
+          <div class="add-field add-field-tenure">
+            <label>Tenure</label>
+            <div class="tenure-row">
+              <select [ngModel]="addTenureYears()" (ngModelChange)="addTenureYears.set($event)">
+                @for (y of yearOptions; track y) {
+                  <option [ngValue]="y">{{ y }} yr{{ y !== 1 ? 's' : '' }}</option>
+                }
+              </select>
+              <select [ngModel]="addTenureMonths()" (ngModelChange)="addTenureMonths.set($event)">
+                @for (m of monthOptions; track m) {
+                  <option [ngValue]="m">{{ m }} mo</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="add-field">
+            <label>Bank</label>
+            <input type="text" [ngModel]="addBank()" (ngModelChange)="addBank.set($event)" placeholder="e.g. HDFC" />
+          </div>
+          <div class="add-field">
+            <label>Goal</label>
+            <input type="text" [ngModel]="addGoal()" (ngModelChange)="addGoal.set($event)" placeholder="e.g. Emergency Fund" />
+          </div>
+          <div class="add-field">
+            <label>Booking Date</label>
+            <input type="date" [ngModel]="addDate()" (ngModelChange)="addDate.set($event)" />
+          </div>
+          <div class="add-field add-field-wide">
+            <label>Notes</label>
+            <input type="text" [ngModel]="addNotes()" (ngModelChange)="addNotes.set($event)" placeholder="e.g. Can break anytime" />
+          </div>
         }
-      </tbody>
-    </table>
+        <div class="add-field add-action">
+          <button class="btn btn-add" (click)="submitAdd(cat.type)"
+            [disabled]="submitting() || (cat.type !== 'FD' ? addQuantity() <= 0 : addAmount() <= 0)">
+            {{ submitting() ? 'Adding...' : '＋ Add' }}
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Asset Table -->
+    @if (cat.assets.length > 0) {
+      @if (cat.type !== 'FD') {
+        <!-- Metal table -->
+        <table>
+          <thead>
+            <tr>
+              <th>Grams</th>
+              <th>Purchase Rate</th>
+              <th>Purchase Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (asset of cat.assets; track asset.id) {
+              <tr>
+                <td>
+                  @if (isEditing(asset.id)) {
+                    <div class="edit-row">
+                      <input type="number" [ngModel]="editQuantity()" (ngModelChange)="editQuantity.set($event)" min="0.01" step="0.01" class="edit-input" />
+                      <span class="edit-unit">g</span>
+                    </div>
+                  } @else {
+                    {{ asset.quantity }}g
+                  }
+                </td>
+                <td>
+                  @if (isEditing(asset.id)) {
+                    <div class="edit-row">
+                      <span class="edit-unit">₹</span>
+                      <input type="number" [ngModel]="editRate()" (ngModelChange)="editRate.set($event)" min="0" step="0.01" class="edit-input" />
+                      <span class="edit-unit">/g</span>
+                    </div>
+                  } @else {
+                    @if (asset.purchaseRatePerGram > 0) {
+                      {{ formatCurrency(asset.purchaseRatePerGram) }}/g
+                    } @else { — }
+                  }
+                </td>
+                <td>
+                  @if (isEditing(asset.id)) {
+                    <input type="date" [ngModel]="editDate()" (ngModelChange)="editDate.set($event)" class="edit-input edit-date" />
+                  } @else {
+                    {{ asset.purchaseDate | date:'mediumDate' }}
+                  }
+                </td>
+                <td>
+                  @if (isEditing(asset.id)) {
+                    <div class="action-row">
+                      <button class="btn btn-save" (click)="saveEdit(asset)" [disabled]="saving()">{{ saving() ? 'Saving...' : '✓ Save' }}</button>
+                      <button class="btn btn-cancel" (click)="cancelEdit()">✕</button>
+                    </div>
+                  } @else {
+                    <div class="action-row">
+                      <button class="btn btn-edit" (click)="startEdit(asset)">✏️</button>
+                      <button class="btn btn-danger" (click)="deleteAsset(asset.id)">🗑️</button>
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <!-- FD table (richer columns) -->
+        <div class="fd-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Principal</th>
+                <th>Bank</th>
+                <th>Rate</th>
+                <th>Tenure</th>
+                <th>Goal</th>
+                <th>Booked</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (asset of cat.assets; track asset.id) {
+                <tr>
+                  <td>
+                    @if (isEditing(asset.id)) {
+                      <div class="edit-row">
+                        <span class="edit-unit">₹</span>
+                        <input type="number" [ngModel]="editAmount()" (ngModelChange)="editAmount.set($event)" min="1" class="edit-input" />
+                      </div>
+                    } @else {
+                      {{ formatCurrency(asset.amount) }}
+                    }
+                  </td>
+                  <td>
+                    @if (isEditing(asset.id)) {
+                      <input type="text" [ngModel]="editBank()" (ngModelChange)="editBank.set($event)" class="edit-input edit-text" placeholder="Bank" />
+                    } @else {
+                      {{ asset.bankName || '—' }}
+                    }
+                  </td>
+                  <td>
+                    @if (isEditing(asset.id)) {
+                      <div class="edit-row">
+                        <input type="number" [ngModel]="editInterestRate()" (ngModelChange)="editInterestRate.set($event)" min="0" max="100" step="0.1" class="edit-input edit-sm" />
+                        <span class="edit-unit">%</span>
+                      </div>
+                    } @else {
+                      {{ asset.interestRate > 0 ? asset.interestRate + '%' : '—' }}
+                    }
+                  </td>
+                  <td>
+                    @if (isEditing(asset.id)) {
+                      <div class="tenure-row">
+                        <select [ngModel]="editTenureYears()" (ngModelChange)="editTenureYears.set($event)" class="edit-input edit-select-sm">
+                          @for (y of yearOptions; track y) {
+                            <option [ngValue]="y">{{ y }}y</option>
+                          }
+                        </select>
+                        <select [ngModel]="editTenureMonths()" (ngModelChange)="editTenureMonths.set($event)" class="edit-input edit-select-sm">
+                          @for (m of monthOptions; track m) {
+                            <option [ngValue]="m">{{ m }}m</option>
+                          }
+                        </select>
+                      </div>
+                    } @else {
+                      {{ formatTenure(asset.tenureMonths) }}
+                    }
+                  </td>
+                  <td>
+                    @if (isEditing(asset.id)) {
+                      <input type="text" [ngModel]="editGoal()" (ngModelChange)="editGoal.set($event)" class="edit-input edit-text" placeholder="Goal" />
+                    } @else {
+                      <span class="fd-goal">{{ asset.goal || '—' }}</span>
+                    }
+                  </td>
+                  <td>
+                    @if (isEditing(asset.id)) {
+                      <input type="date" [ngModel]="editDate()" (ngModelChange)="editDate.set($event)" class="edit-input edit-date" />
+                    } @else {
+                      {{ asset.purchaseDate | date:'mediumDate' }}
+                    }
+                  </td>
+                  <td>
+                    @if (isEditing(asset.id)) {
+                      <input type="text" [ngModel]="editNotes()" (ngModelChange)="editNotes.set($event)" class="edit-input edit-text" placeholder="Notes" />
+                    } @else {
+                      <span class="fd-notes">{{ asset.notes || '—' }}</span>
+                    }
+                  </td>
+                  <td>
+                    @if (isEditing(asset.id)) {
+                      <div class="action-row">
+                        <button class="btn btn-save" (click)="saveEdit(asset)" [disabled]="saving()">{{ saving() ? '...' : '✓' }}</button>
+                        <button class="btn btn-cancel" (click)="cancelEdit()">✕</button>
+                      </div>
+                    } @else {
+                      <div class="action-row">
+                        <button class="btn btn-edit" (click)="startEdit(asset)">✏️</button>
+                        <button class="btn btn-danger" (click)="deleteAsset(asset.id)">🗑️</button>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    } @else {
+      @if (!isAdding(cat.type)) {
+        <p class="empty-group">No {{ cat.label.toLowerCase() }} yet. Tap ＋ to add.</p>
+      }
+    }
   </div>
 }

@@ -48,6 +48,36 @@
       </div>
     }
 
+    <!-- Purchase Date -->
+    <div class="form-group">
+      <label for="purchaseDate">Purchase Date</label>
+      <input
+        id="purchaseDate"
+        type="date"
+        [ngModel]="purchaseDate()"
+        (ngModelChange)="purchaseDate.set($event)"
+        name="purchaseDate"
+      />
+    </div>
+
+    <!-- Purchase Rate (Gold / Silver) -->
+    @if (isMetalType) {
+      <div class="form-group">
+        <label for="purchaseRate">Purchase Rate (₹ per gram)</label>
+        <input
+          id="purchaseRate"
+          type="number"
+          [ngModel]="purchaseRate()"
+          (ngModelChange)="purchaseRate.set($event)"
+          name="purchaseRate"
+          min="0"
+          step="0.01"
+          placeholder="e.g. 5500"
+        />
+        <small class="form-hint">Rate at which you bought. Used for profit/loss calculation.</small>
+      </div>
+    }
+
     <button type="submit" class="btn btn-primary" [disabled]="submitting()">
       {{ submitting() ? 'Adding...' : 'Add Asset' }}
     </button>

@@ -11,6 +11,8 @@ import { NetWorthSummary, MetalPrices } from '../../models/models';
   styleUrl: './dashboard.css',
 })
 export class Dashboard implements OnInit {
+  Math = Math;
+
   summary = signal<NetWorthSummary | null>(null);
   prices = signal<MetalPrices | null>(null);
   loading = signal(true);
@@ -29,9 +31,8 @@ export class Dashboard implements OnInit {
     this.loading.set(true);
     this.error.set('');
 
-    // Load net worth
     this.valuationService.getNetWorth().subscribe({
-      next: (data) => {
+      next: (data: NetWorthSummary) => {
         this.summary.set(data);
         this.loading.set(false);
       },
@@ -41,14 +42,26 @@ export class Dashboard implements OnInit {
       }
     });
 
-    // Load live prices
     this.priceService.getCurrentPrices().subscribe({
-      next: (data) => this.prices.set(data),
-      error: () => {} // Prices are optional on dashboard
+      next: (data: MetalPrices) => this.prices.set(data),
+      error: () => {}
     });
   }
 
   formatCurrency(value: number): string {
     return '₹' + value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  formatGrams(value: number): string {
+    return value.toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + 'g';
+  }
+
+  formatKg(grams: number): string {
+    return (grams / 1000).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 2 }) + ' kg';
+  }
+
+  formatPercent(value: number): string {
+    const abs = Math.abs(value);
+    return (value >= 0 ? '+' : '-') + abs.toFixed(2) + '%';
   }
 }

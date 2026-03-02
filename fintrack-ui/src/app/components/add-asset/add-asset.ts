@@ -16,6 +16,8 @@ export class AddAsset {
   selectedType = signal<AssetType>(AssetType.Gold);
   quantity = signal(0);
   amount = signal(0);
+  purchaseDate = signal('');
+  purchaseRate = signal(0);
   submitting = signal(false);
   successMessage = signal('');
   errorMessage = signal('');
@@ -35,7 +37,9 @@ export class AddAsset {
     const request: AddAssetRequest = {
       type: this.selectedType(),
       quantity: this.isMetalType ? this.quantity() : 0,
-      amount: !this.isMetalType ? this.amount() : 0
+      amount: !this.isMetalType ? this.amount() : 0,
+      purchaseDate: this.purchaseDate() || undefined,
+      purchaseRatePerGram: this.isMetalType ? this.purchaseRate() : 0
     };
 
     this.assetService.addAsset(request).subscribe({
@@ -43,6 +47,8 @@ export class AddAsset {
         this.successMessage.set(`${this.selectedType()} asset added successfully!`);
         this.quantity.set(0);
         this.amount.set(0);
+        this.purchaseDate.set('');
+        this.purchaseRate.set(0);
         this.submitting.set(false);
       },
       error: () => {

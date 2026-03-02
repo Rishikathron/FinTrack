@@ -113,12 +113,111 @@ The code changes are saved but the user reported the issue still persists. Likel
 
 ---
 
+## Issue #2: MetalPriceProvider Always Returns Fallback Prices
+
+### Symptoms
+- API always returned hardcoded fallback prices (Gold: ?7,500/g, Silver: ?90/g) instead of live prices.
+- Dashboard showed stale/incorrect valuations.
+
+### Root Cause Analysis
+Two problems were found:
+
+1. **No API key configured** — `MetalPriceApi:ApiKey` was empty in `appsettings.json`, so the provider hit `string.IsNullOrWhiteSpace` and always returned fallback prices.
+2. **Price calculation bug** — The code was doing `1 / INRXAU` as if the rate represented "ounces per INR". In reality, `INRXAU` is already the **INR price per ounce** (e.g., ?480,601). The `1/rate` inversion produced a near-zero value.
+
+**API response example:**
+```json
+{
+  "success": true,
+  "base": "INR",
+  "rates": {
+    "INRXAU": 480601.28,   // ? ?480,601 per ounce of gold (correct price)
+    "INRXAG": 8538.44,     // ? ?8,538 per ounce of silver
+    "XAU": 0.0000020807,   // ? ounces of gold per 1 INR
+    "XAG": 0.0001171174    // ? ounces of silver per 1 INR
+  }
+}
+```
+
+**Old (broken) logic:** `goldPerOunce = 1 / 480601 = 0.0000021` ? ?0.00/g
+**New (fixed) logic:** `goldPerOunce = 480601` ? `480601 / 31.1035 = ?15,455/g` ?
+
+### Changes Made
+
+#### User Secrets (secure, not committed)
+```
+dotnet user-secrets set "MetalPriceApi:ApiKey" "<key>"
+```
+
+#### File: `FinTrack/Providers/MetalPriceProvider.cs`
+
+| Change | Before | After |
+|--------|--------|-------|
+| Gold rate usage | `1m / rates["INRXAU"]` | `rates["INRXAU"]` directly |
+| Silver rate usage | `1m / rates["INRXAG"]` | `rates["INRXAG"]` directly |
+| Comments | Inaccurate | Updated to reflect actual API response format |
+
+### Status: ? FIXED
+
+---
+
+## Issue #3: Switch to Yahoo Finance (Free, No API Key)
+
+### Motivation
+- MetalPriceAPI free tier is limited and requires an API key
+- Location-specific Indian prices (Chennai, Mumbai) require paid APIs
+- Yahoo Finance provides free, near-live COMEX futures data with no API key
+
+### Implementation
+
+**Data Sources (Yahoo Finance):**
+| Symbol | Data | Example |
+|--------|------|---------|
+| `GC=F` | Gold Futures (USD/troy ounce) | $5,426.70 |
+| `SI=F` | Silver Futures (USD/troy ounce) | $32.45 |
+| `INR=X` | USD/INR exchange rate | 87.15 |
+
+**Formula:**
+```
+Gold ?/gram  = (GC=F × INR=X) / 31.1035
+Silver ?/gram = (SI=F × INR=X) / 31.1035
+```
+
+**Optional local premium** (configurable, default 0%):
+```
+Final price = computed price × (1 + LocalPremiumPercent / 100)
+```
+
+### Changes Made
+
+#### File: `FinTrack/Providers/MetalPriceProvider.cs`
+- **Complete rewrite** — replaced MetalPriceAPI with Yahoo Finance
+- Fetches GC=F, SI=F, INR=X **in parallel** using `Task.WhenAll`
+- Parses `chart.result[0].meta.regularMarketPrice` from Yahoo response
+- Converts USD/oz ? INR/gram
+- Applies optional local premium from config
+- Sets `User-Agent` header (required by Yahoo)
+- Keeps 10-minute cache and fallback prices
+
+#### File: `FinTrack/appsettings.json`
+- Removed `MetalPriceApi` section
+- Added `PriceSettings.LocalPremiumPercent` (default: 0)
+
+#### File: `fintrack-ui/src/app/components/dashboard/dashboard.html`
+- Live Prices card label ? "Global Market Rate"
+- Added source attribution: "Yahoo Finance (COMEX Futures + USD/INR)"
+
+### Status: ? COMPLETE — Restart API + Angular to apply
+
+---
+
 ## Pending / Known Issues
 
 | # | Issue | Status | Notes |
 |---|-------|--------|-------|
 | 1 | CORS cross-origin error | ?? Code fixed, awaiting restart | User must restart both .NET API and Angular dev server |
-| 2 | — | — | — |
+| 2 | MetalPriceProvider fallback/wrong prices | ? Fixed | API key stored in User Secrets, price calculation corrected |
+| 3 | Switch to Yahoo Finance | ? Complete | NO API KEY required, uses free Yahoo Finance data |
 
 ---
 
@@ -158,3 +257,7 @@ The code changes are saved but the user reported the issue still persists. Likel
 | 1 | Current | Fixed CORS issue: reordered middleware, updated Angular `environment.ts` to correct API URL, added credentials support. Awaiting user restart to verify. |
 | 2 | Current | Created comprehensive `README.md` documenting Phase 1 — full project structure, architecture, API endpoints, models, services, storage, external API integration, CORS config, launch profiles, and getting started guide. |
 | 3 | Current | Created root `.gitignore` — ignores `bin/`, `obj/`, `.vs/`, `*.user`, `node_modules/`, `dist/`, `.angular/`, `AppData/*.json`, OS files, and IDE artifacts. |
+| 4 | Current | Fixed MetalPriceProvider: stored API key in User Secrets, fixed price calculation bug (`1/rate` inversion removed — `INRXAU` is already INR per ounce). |
+| 5 | Current | Replaced MetalPriceAPI with Yahoo Finance (free, no key). Fetches GC=F, SI=F, INR=X in parallel. Configurable local premium. Updated UI label to "Global Market Rate". |
+| 6 | Current | Added 22K gold conversion (×22/24) from COMEX 24K futures price. |
+| 7 | Current | Added full Edit (PUT) API: `UpdateAssetRequest` model, `IAssetService.UpdateAssetAsync`/`GetAssetByIdAsync`, `AssetService` implementation, `PUT /api/assets/{id}` + `GET /api/assets/{id}` controller endpoints. Angular: `UpdateAssetRequest` model, `asset.ts` service methods, inline edit UI in asset-list component. |

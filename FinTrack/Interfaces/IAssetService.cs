@@ -8,6 +8,8 @@ namespace FinTrack.Interfaces;
 public interface IAssetService
 {
     Task<List<Asset>> GetAssetsAsync(string userId);
+    Task<Asset?> GetAssetByIdAsync(string userId, Guid assetId);
     Task<Asset> AddAssetAsync(string userId, AddAssetRequest request);
+    Task<Asset?> UpdateAssetAsync(string userId, Guid assetId, UpdateAssetRequest request);
     Task<bool> DeleteAssetAsync(string userId, Guid assetId);
 }

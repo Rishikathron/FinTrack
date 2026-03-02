@@ -19,18 +19,75 @@
   <div class="category-grid">
     <div class="card category-card gold">
       <span class="cat-icon">🥇</span>
-      <span class="cat-label">Gold</span>
+      <span class="cat-label">Gold (22K)</span>
       <span class="cat-value">{{ formatCurrency(s.goldValue) }}</span>
+      <div class="cat-details">
+        <span class="cat-detail">⚖️ {{ formatGrams(s.goldTotalGrams) }}</span>
+        <span class="cat-detail">👑 {{ s.goldSovereigns }} sovereign{{ s.goldSovereigns !== 1 ? 's' : '' }}</span>
+        @if (prices(); as p) {
+          <span class="cat-detail">📈 {{ formatCurrency(p.goldPricePerGram) }}/g</span>
+          <span class="daily-change" [class.up]="p.goldDailyChangePercent >= 0" [class.down]="p.goldDailyChangePercent < 0">
+            {{ p.goldDailyChangePercent >= 0 ? '▲' : '▼' }} {{ formatPercent(p.goldDailyChangePercent) }} today
+          </span>
+        }
+      </div>
+      @if (s.goldInvested > 0) {
+        <div class="cat-pnl">
+          <span class="pnl-invested-highlight">💸 Invested: {{ formatCurrency(s.goldInvested) }}</span>
+          <span class="pnl-value-sm" [class.profit]="s.goldProfitLoss >= 0" [class.loss]="s.goldProfitLoss < 0">
+            {{ s.goldProfitLoss >= 0 ? '▲' : '▼' }} {{ formatCurrency(Math.abs(s.goldProfitLoss)) }}
+            ({{ s.goldProfitLossPercent >= 0 ? '+' : '' }}{{ s.goldProfitLossPercent }}%)
+          </span>
+        </div>
+      }
     </div>
     <div class="card category-card silver">
       <span class="cat-icon">🥈</span>
       <span class="cat-label">Silver</span>
       <span class="cat-value">{{ formatCurrency(s.silverValue) }}</span>
+      <div class="cat-details">
+        <span class="cat-detail">⚖️ {{ formatGrams(s.silverTotalGrams) }}</span>
+        @if (s.silverTotalGrams >= 1000) {
+          <span class="cat-detail">📦 {{ formatKg(s.silverTotalGrams) }}</span>
+        }
+        @if (prices(); as p) {
+          <span class="cat-detail">📈 {{ formatCurrency(p.silverPricePerGram) }}/g</span>
+          <span class="daily-change" [class.up]="p.silverDailyChangePercent >= 0" [class.down]="p.silverDailyChangePercent < 0">
+            {{ p.silverDailyChangePercent >= 0 ? '▲' : '▼' }} {{ formatPercent(p.silverDailyChangePercent) }} today
+          </span>
+        }
+      </div>
+      @if (s.silverInvested > 0) {
+        <div class="cat-pnl">
+          <span class="pnl-invested-highlight">💸 Invested: {{ formatCurrency(s.silverInvested) }}</span>
+          <span class="pnl-value-sm" [class.profit]="s.silverProfitLoss >= 0" [class.loss]="s.silverProfitLoss < 0">
+            {{ s.silverProfitLoss >= 0 ? '▲' : '▼' }} {{ formatCurrency(Math.abs(s.silverProfitLoss)) }}
+            ({{ s.silverProfitLossPercent >= 0 ? '+' : '' }}{{ s.silverProfitLossPercent }}%)
+          </span>
+        </div>
+      }
     </div>
     <div class="card category-card fd">
       <span class="cat-icon">🏦</span>
       <span class="cat-label">Fixed Deposits</span>
       <span class="cat-value">{{ formatCurrency(s.fdValue) }}</span>
+      @if (s.fdCount > 0) {
+        <div class="cat-details">
+          <span class="cat-detail">📄 {{ s.fdCount }} deposit{{ s.fdCount !== 1 ? 's' : '' }}</span>
+        </div>
+        <div class="cat-pnl">
+          <span class="pnl-invested-highlight">💸 Invested: {{ formatCurrency(s.fdPrincipal) }}</span>
+        </div>
+        @if (s.fdBankBreakdown && s.fdBankBreakdown.length > 0) {
+          <div class="fd-bank-chips">
+            @for (bank of s.fdBankBreakdown; track bank.bankName) {
+              <span class="fd-bank-chip" [attr.data-tooltip]="formatCurrency(bank.principal) + ' across ' + bank.count + ' FD' + (bank.count !== 1 ? 's' : '')">
+                🏛️ {{ bank.bankName }}
+              </span>
+            }
+          </div>
+        }
+      }
     </div>
   </div>
 }
@@ -38,11 +95,21 @@
 <!-- Live Prices -->
 @if (prices(); as p) {
   <div class="card prices-card">
-    <h3>📈 Live Metal Prices (per gram)</h3>
+    <h3>📈 Live Metal Prices — Global Market Rate (per gram)</h3>
     <div class="prices-row">
-      <span>Gold: <strong>{{ formatCurrency(p.goldPricePerGram) }}</strong></span>
-      <span>Silver: <strong>{{ formatCurrency(p.silverPricePerGram) }}</strong></span>
+      <span class="price-item">
+        Gold (22K): <strong>{{ formatCurrency(p.goldPricePerGram) }}</strong>
+        <span class="daily-change-inline" [class.up]="p.goldDailyChangePercent >= 0" [class.down]="p.goldDailyChangePercent < 0">
+          {{ p.goldDailyChangePercent >= 0 ? '▲' : '▼' }} {{ formatPercent(p.goldDailyChangePercent) }}
+        </span>
+      </span>
+      <span class="price-item">
+        Silver: <strong>{{ formatCurrency(p.silverPricePerGram) }}</strong>
+        <span class="daily-change-inline" [class.up]="p.silverDailyChangePercent >= 0" [class.down]="p.silverDailyChangePercent < 0">
+          {{ p.silverDailyChangePercent >= 0 ? '▲' : '▼' }} {{ formatPercent(p.silverDailyChangePercent) }}
+        </span>
+      </span>
     </div>
-    <small class="fetched-at">Last updated: {{ p.fetchedAt | date:'medium' }}</small>
+    <small class="fetched-at">Source: Yahoo Finance (COMEX Futures + USD/INR) · Last updated: {{ p.fetchedAt | date:'medium' }}</small>
   </div>
 }

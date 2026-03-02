@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
@@ -7,4 +7,14 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
-export class App {}
+export class App {
+  sideMenuOpen = signal(false);
+
+  toggleMenu(): void {
+    this.sideMenuOpen.update(v => !v);
+  }
+
+  closeMenu(): void {
+    this.sideMenuOpen.set(false);
+  }
+}
