@@ -1,0 +1,48 @@
+<h2>📊 Dashboard</h2>
+
+@if (loading()) {
+  <p class="loading">Loading your portfolio...</p>
+}
+
+@if (error(); as err) {
+  <p class="error">{{ err }}</p>
+}
+
+@if (summary(); as s) {
+  <!-- Total Net Worth -->
+  <div class="networth-card card">
+    <span class="networth-label">Total Net Worth</span>
+    <span class="networth-value">{{ formatCurrency(s.totalNetWorth) }}</span>
+  </div>
+
+  <!-- Category Breakdown -->
+  <div class="category-grid">
+    <div class="card category-card gold">
+      <span class="cat-icon">🥇</span>
+      <span class="cat-label">Gold</span>
+      <span class="cat-value">{{ formatCurrency(s.goldValue) }}</span>
+    </div>
+    <div class="card category-card silver">
+      <span class="cat-icon">🥈</span>
+      <span class="cat-label">Silver</span>
+      <span class="cat-value">{{ formatCurrency(s.silverValue) }}</span>
+    </div>
+    <div class="card category-card fd">
+      <span class="cat-icon">🏦</span>
+      <span class="cat-label">Fixed Deposits</span>
+      <span class="cat-value">{{ formatCurrency(s.fdValue) }}</span>
+    </div>
+  </div>
+}
+
+<!-- Live Prices -->
+@if (prices(); as p) {
+  <div class="card prices-card">
+    <h3>📈 Live Metal Prices (per gram)</h3>
+    <div class="prices-row">
+      <span>Gold: <strong>{{ formatCurrency(p.goldPricePerGram) }}</strong></span>
+      <span>Silver: <strong>{{ formatCurrency(p.silverPricePerGram) }}</strong></span>
+    </div>
+    <small class="fetched-at">Last updated: {{ p.fetchedAt | date:'medium' }}</small>
+  </div>
+}

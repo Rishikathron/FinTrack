@@ -1,0 +1,24 @@
+.loading {
+  color: #888;
+  font-style: italic;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.empty {
+  text-align: center;
+  color: #888;
+}
+
+.empty a {
+  color: #e94560;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.empty a:hover {
+  text-decoration: underline;
+}

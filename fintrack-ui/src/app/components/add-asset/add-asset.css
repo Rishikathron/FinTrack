@@ -1,0 +1,27 @@
+.form-card {
+  max-width: 480px;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  margin-bottom: 0.3rem;
+}
+
+button[type="submit"] {
+  margin-top: 0.5rem;
+}
+
+.success {
+  color: #198754;
+  font-weight: 600;
+  margin-top: 1rem;
+}
+
+.error {
+  color: #dc3545;
+  font-weight: 600;
+  margin-top: 1rem;
+}

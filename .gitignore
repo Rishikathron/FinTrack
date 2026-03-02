@@ -1,0 +1,95 @@
+# ============================================
+# FinTrack — Root .gitignore
+# ============================================
+
+# ----------------
+# .NET / C#
+# ----------------
+
+# Build outputs
+**/bin/
+**/obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+*.rsuser
+launchSettings.user.json
+
+# NuGet
+**/packages/
+*.nupkg
+**/project.lock.json
+**/project.fragment.lock.json
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# User secrets (local dev config)
+secrets.json
+
+# ----------------
+# Application Data
+# ----------------
+
+# Runtime JSON data files (per-user asset storage)
+FinTrack/AppData/*.json
+
+# ----------------
+# Angular (fintrack-ui)
+# ----------------
+
+# Node
+fintrack-ui/node_modules/
+fintrack-ui/npm-debug.log
+fintrack-ui/yarn-error.log
+
+# Compiled output
+fintrack-ui/dist/
+fintrack-ui/tmp/
+fintrack-ui/out-tsc/
+
+# Angular cache
+fintrack-ui/.angular/
+
+# ----------------
+# Docker
+# ----------------
+**/docker-compose*.override.yml
+
+# ----------------
+# OS Files
+# ----------------
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ----------------
+# IDE / Editor
+# ----------------
+*.swp
+*.swo
+*~
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+
+# ----------------
+# Misc
+# ----------------
+*.log
+*.tmp
+*.temp

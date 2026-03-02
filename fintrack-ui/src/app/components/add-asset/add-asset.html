@@ -1,0 +1,63 @@
+<h2>➕ Add Asset</h2>
+
+<div class="card form-card">
+  <form (ngSubmit)="onSubmit()">
+    <!-- Asset Type -->
+    <div class="form-group">
+      <label for="assetType">Asset Type</label>
+      <select id="assetType" [ngModel]="selectedType()" (ngModelChange)="selectedType.set($event)" name="assetType">
+        @for (type of assetTypes; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
+    </div>
+
+    <!-- Quantity (Gold / Silver) -->
+    @if (isMetalType) {
+      <div class="form-group">
+        <label for="quantity">Quantity (grams)</label>
+        <input
+          id="quantity"
+          type="number"
+          [ngModel]="quantity()"
+          (ngModelChange)="quantity.set($event)"
+          name="quantity"
+          min="0.01"
+          step="0.01"
+          placeholder="e.g. 10"
+          required
+        />
+      </div>
+    }
+
+    <!-- Amount (FD) -->
+    @if (!isMetalType) {
+      <div class="form-group">
+        <label for="amount">Amount (₹ INR)</label>
+        <input
+          id="amount"
+          type="number"
+          [ngModel]="amount()"
+          (ngModelChange)="amount.set($event)"
+          name="amount"
+          min="1"
+          step="1"
+          placeholder="e.g. 500000"
+          required
+        />
+      </div>
+    }
+
+    <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+      {{ submitting() ? 'Adding...' : 'Add Asset' }}
+    </button>
+  </form>
+
+  @if (successMessage(); as msg) {
+    <p class="success">{{ msg }}</p>
+  }
+
+  @if (errorMessage(); as msg) {
+    <p class="error">{{ msg }}</p>
+  }
+</div>

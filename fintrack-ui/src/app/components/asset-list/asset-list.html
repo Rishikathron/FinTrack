@@ -1,0 +1,42 @@
+<h2>📋 My Assets</h2>
+
+@if (loading()) {
+  <p class="loading">Loading assets...</p>
+}
+
+@if (error(); as err) {
+  <p class="error">{{ err }}</p>
+}
+
+@if (!loading() && assets().length === 0) {
+  <div class="card empty">
+    <p>No assets yet. <a routerLink="/add-asset">Add your first asset →</a></p>
+  </div>
+}
+
+@if (assets().length > 0) {
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Value</th>
+          <th>Added</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (asset of assets(); track asset.id) {
+          <tr>
+            <td data-label="Type">{{ asset.type }}</td>
+            <td data-label="Value">{{ displayValue(asset) }}</td>
+            <td data-label="Added">{{ asset.createdAt | date:'mediumDate' }}</td>
+            <td>
+              <button class="btn btn-danger" (click)="deleteAsset(asset.id)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
