@@ -1,4 +1,9 @@
-<h2>📋 My Assets</h2>
+<div class="asset-list-header">
+  <h2>📋 My Assets</h2>
+  <button class="refresh-btn" (click)="loadAssets()" [disabled]="loading()" title="Refresh assets">
+    🔄 Refresh
+  </button>
+</div>
 
 @if (loading()) {
   <p class="loading">Loading assets...</p>

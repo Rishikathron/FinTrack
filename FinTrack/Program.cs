@@ -1,3 +1,4 @@
+using FinTrack.AI.Extensions;
 using FinTrack.Interfaces;
 using FinTrack.Providers;
 using FinTrack.Services;
@@ -21,6 +22,9 @@ builder.Services.AddScoped<IValuationService, ValuationService>();
 
 // Price provider with HttpClient
 builder.Services.AddHttpClient<IPriceProvider, MetalPriceProvider>();
+
+// Semantic Kernel AI (ChatService + plugins)
+builder.Services.AddFinTrackAI();
 
 // CORS for Angular frontend (localhost:4200)
 builder.Services.AddCors(options =>

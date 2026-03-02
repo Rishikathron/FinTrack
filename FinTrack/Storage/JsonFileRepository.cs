@@ -19,8 +19,16 @@ public class JsonFileRepository
     };
 
     public JsonFileRepository(IWebHostEnvironment env)
+        : this(Path.Combine(env.ContentRootPath, "AppData"))
     {
-        _dataFolder = Path.Combine(env.ContentRootPath, "AppData");
+    }
+
+    /// <summary>
+    /// Constructor for non-web scenarios (e.g., console apps, tests).
+    /// </summary>
+    public JsonFileRepository(string dataFolder)
+    {
+        _dataFolder = dataFolder;
         Directory.CreateDirectory(_dataFolder);
     }
 

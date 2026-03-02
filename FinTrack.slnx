@@ -1,4 +1,4 @@
-<Solution>
+<Solution><Folder Name="/Solution Items/"><File Path="README.md" /><File Path="COPILOT_CHANGES.md" /></Folder>
   <Project Path="fintrack-ui/" Type="Website" DisplayName="fintrack-ui">
     <BuildType Project="Debug" />
     <Properties Name="WebsiteProperties">
@@ -20,4 +20,8 @@
       <Property Name="VWDPort" Value="&quot;63100&quot;" />
     </Properties>
   </Project>
-  <Project Path="FinTrack.Core/FinTrack.Core.csproj" /><Project Path="FinTrack/FinTrack.csproj" /><Folder Name="/Solution Items/"><File Path="README.md" /><File Path="COPILOT_CHANGES.md" /></Folder></Solution>
+  <Project Path="FinTrack.AI/FinTrack.AI.csproj" />
+  <Project Path="FinTrack.Console/FinTrack.Console.csproj" />
+  <Project Path="FinTrack.Core/FinTrack.Core.csproj" />
+  <Project Path="FinTrack/FinTrack.csproj" />
+</Solution>

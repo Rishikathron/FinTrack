@@ -1,4 +1,9 @@
 <h2>📊 Dashboard</h2>
+<div class="dashboard-header">
+  <button class="refresh-btn" (click)="loadData()" [disabled]="loading()" title="Refresh data">
+    🔄 Refresh
+  </button>
+</div>
 
 @if (loading()) {
   <p class="loading">Loading your portfolio...</p>

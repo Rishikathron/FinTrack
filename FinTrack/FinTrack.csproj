@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FinTrack.Core\FinTrack.Core.csproj" />
+    <ProjectReference Include="..\FinTrack.AI\FinTrack.AI.csproj" />
   </ItemGroup>
 
 </Project>
