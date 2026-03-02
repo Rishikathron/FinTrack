@@ -111,3 +111,17 @@ export interface AssetValuation {
   goal: string;
   notes: string;
 }
+
+export interface ChatRequest {
+  message: string;
+}
+
+export interface ChatResponse {
+  reply: string;
+  dataChanged: boolean;
+}
+
+export interface ChatMessage {
+  role: 'user' | 'ai';
+  text: string;
+}

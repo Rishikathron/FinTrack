@@ -101,6 +101,7 @@ public class ChatService
         _kernel.Plugins.AddFromObject(_assetsPlugin, "Assets");
         _kernel.Plugins.AddFromObject(new ValuationPlugin(valuationService), "Valuation");
         _kernel.Plugins.AddFromObject(new PricesPlugin(priceProvider), "Prices");
+        _kernel.Plugins.AddFromObject(new HelpPlugin(), "Help");
 
         _chatCompletion = _kernel.GetRequiredService<IChatCompletionService>();
 

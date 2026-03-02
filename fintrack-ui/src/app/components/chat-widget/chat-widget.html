@@ -1,0 +1,46 @@
+<!-- Floating Action Button -->
+<button class="chat-fab" (click)="toggle()" [class.open]="chat.isOpen" title="Chat with FinTrack AI">
+  @if (chat.isOpen) { ✕ } @else { 💬 }
+</button>
+
+<!-- Chat Panel -->
+@if (chat.isOpen) {
+  <div class="chat-widget">
+    <!-- Header -->
+    <div class="chat-header">
+      <span class="chat-title">🤖 FinTrack AI</span>
+      <button class="chat-reset-btn" (click)="resetChat()" title="New conversation">🗑️</button>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-body" #chatBody>
+      @for (msg of chat.messages; track $index) {
+        <div class="chat-msg" [class.user]="msg.role === 'user'" [class.ai]="msg.role === 'ai'">
+          <div class="chat-bubble">{{ msg.text }}</div>
+        </div>
+      }
+      @if (chatSending) {
+        <div class="chat-msg ai">
+          <div class="chat-bubble typing">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Input -->
+    <div class="chat-footer">
+      <input
+        type="text"
+        class="chat-input"
+        placeholder="Ask about your portfolio..."
+        [(ngModel)]="chatInput"
+        (keydown)="onKeydown($event)"
+        [disabled]="chatSending"
+      />
+      <button class="chat-send-btn" (click)="sendMessage()" [disabled]="chatSending || !chatInput.trim()">
+        ➤
+      </button>
+    </div>
+  </div>
+}

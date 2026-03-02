@@ -1,8 +1,10 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { AssetService } from '../../services/asset';
+import { ChatService } from '../../services/chat';
 import { Asset, AssetType } from '../../models/models';
 
 @Component({
@@ -11,7 +13,7 @@ import { Asset, AssetType } from '../../models/models';
   templateUrl: './asset-list.html',
   styleUrl: './asset-list.css',
 })
-export class AssetList implements OnInit {
+export class AssetList implements OnInit, OnDestroy {
   assets = signal<Asset[]>([]);
   loading = signal(true);
   error = signal('');
@@ -63,10 +65,30 @@ export class AssetList implements OnInit {
     { type: AssetType.FD, label: 'Fixed Deposits', icon: '🏦', assets: this.fdAssets() },
   ]);
 
-  constructor(private assetService: AssetService) {}
+  private dataSub!: Subscription;
+
+  constructor(
+    private assetService: AssetService,
+    private chatService: ChatService
+  ) {}
 
   ngOnInit(): void {
     this.loadAssets();
+
+    // Auto-refresh when chat AI modifies assets
+    this.dataSub = this.chatService.dataChanged$.subscribe(() => {
+      // Don't refresh while user is editing or adding
+      if (this.editingId() || this.addingCategory()) return;
+
+      this.assetService.getAssets().subscribe({
+        next: (data: Asset[]) => this.assets.set(data),
+        error: () => {}
+      });
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.dataSub?.unsubscribe();
   }
 
   loadAssets(): void {
