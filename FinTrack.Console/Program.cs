@@ -14,6 +14,7 @@ var config = new ConfigurationBuilder()
     .Build();
 
 // ??? Validate configuration ???
+var environment = config["SemanticKernel:Environment"] ?? "Development";
 var provider = config["SemanticKernel:Provider"] ?? "Ollama";
 var endpoint = config["SemanticKernel:Endpoint"];
 var apiKey = config["SemanticKernel:ApiKey"];
@@ -28,8 +29,30 @@ if (provider.Equals("OpenAI", StringComparison.OrdinalIgnoreCase) && string.IsNu
 }
 
 Console.ForegroundColor = ConsoleColor.DarkGray;
-Console.WriteLine($"Provider : {provider} {(endpoint != null ? $"({endpoint})" : "")}");
-Console.WriteLine($"Model    : {modelId}");
+Console.WriteLine($"Env      : {environment}");
+
+if (environment.Equals("Development", StringComparison.OrdinalIgnoreCase) ||
+    environment.Equals("Local", StringComparison.OrdinalIgnoreCase))
+{
+    Console.WriteLine($"Provider : Ollama (local) {(endpoint != null ? $"({endpoint})" : "")}");
+    Console.WriteLine($"Model    : {modelId}");
+}
+else if (provider.Equals("Multi", StringComparison.OrdinalIgnoreCase))
+{
+    var models = config.GetSection("SemanticKernel:OpenRouter:Models").Get<string[]>() ?? [];
+    Console.WriteLine($"Provider : Multi (OpenRouter ? {models.Length} models + local fallback)");
+    foreach (var m in models)
+        Console.WriteLine($"           • {m}");
+    var localFallback = config.GetValue<bool>("SemanticKernel:LocalFallback", true);
+    if (localFallback)
+        Console.WriteLine($"           • {modelId} (Ollama local fallback)");
+}
+else
+{
+    Console.WriteLine($"Provider : {provider} {(endpoint != null ? $"({endpoint})" : "")}");
+    Console.WriteLine($"Model    : {modelId}");
+}
+
 Console.ResetColor();
 
 // ??? Wire up services (same as the API, but without ASP.NET) ???

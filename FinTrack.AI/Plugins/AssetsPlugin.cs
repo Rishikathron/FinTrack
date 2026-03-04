@@ -1,8 +1,12 @@
-using System.ComponentModel;
-using System.Text.Json;
 using FinTrack.Interfaces;
 using FinTrack.Models;
 using Microsoft.SemanticKernel;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Reflection;
+using System.Text.Json;
+using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FinTrack.AI.Plugins;
 
@@ -53,51 +57,51 @@ public class AssetsPlugin
     }
 
     [KernelFunction("add_gold")]
-    [Description("Add a gold asset with weight in grams and purchase rate per gram in INR")]
+    [Description("Add a gold purchase. IMPORTANT: Do NOT call this unless the user has explicitly stated ALL of: grams, purchase rate per gram, and purchase date. IMPORTANT: If ANY of these three values is missing from the user's message, you MUST ask the user for the missing values before calling this function. Never guess or assume values.")]
     public async Task<string> AddGoldAsync(
-        [Description("Weight in grams (e.g., 8, 10.5)")] decimal quantity,
-        [Description("Purchase rate in INR per gram (e.g., 7200)")] decimal purchaseRatePerGram,
-        [Description("Purchase date in YYYY-MM-DD format. Defaults to today if not provided.")] string? purchaseDate = null)
+        [Description("Weight in grams as stated by the user (e.g., 8, 10.5).IMPORTANT: Must be provided by user.")] decimal quantity,
+        [Description("Purchase rate in INR per gram as stated. IMPORTANT: must be provided by user — never assume or guess this value.")] decimal purchaseRatePerGram,
+        [Description("Purchase date in YYYY-MM-DD format as stated by the user. Must be provided by user")] string purchaseDate)
     {
         var asset = await _assetService.AddAssetAsync(UserId, new AddAssetRequest
         {
             Type = AssetType.Gold,
             Quantity = quantity,
             PurchaseRatePerGram = purchaseRatePerGram,
-            PurchaseDate = purchaseDate != null ? DateTime.Parse(purchaseDate) : null
+            PurchaseDate = purchaseDate == null ? DateTime.Now : DateTime.Parse(purchaseDate)
         });
         DataChanged = true;
-        return $"Gold asset added: {asset.Quantity}g at ?{asset.PurchaseRatePerGram}/g (ID: {asset.Id})";
+        return $"Gold asset added: {asset.Quantity}g at ?{asset.PurchaseRatePerGram}/g on {asset.PurchaseDate:yyyy-MM-dd} (ID: {asset.Id})";
     }
 
     [KernelFunction("add_silver")]
-    [Description("Add a silver asset with weight in grams and purchase rate per gram in INR")]
+    [Description("Add a silver purchase. IMPORTANT: Do NOT call this unless the user has explicitly stated ALL of: grams, purchase rate per gram, and purchase date. If ANY of these three values is missing from the user's message, you MUST ask the user for the missing values before calling this function. Never guess or assume values.")]
     public async Task<string> AddSilverAsync(
-        [Description("Weight in grams (e.g., 500, 1000)")] decimal quantity,
-        [Description("Purchase rate in INR per gram (e.g., 95)")] decimal purchaseRatePerGram,
-        [Description("Purchase date in YYYY-MM-DD format. Defaults to today if not provided.")] string? purchaseDate = null)
+        [Description("Weight in grams as stated by the user (e.g., 500, 1000). Must be provided by user.")] decimal quantity,
+        [Description("Purchase rate in INR per gram as stated by the user (e.g., 95). Must be provided by user — never assume or guess this value.")] decimal purchaseRatePerGram,
+        [Description("Purchase date in YYYY-MM-DD format as stated by the user. Must be provided by user — never default to today.")] string purchaseDate)
     {
         var asset = await _assetService.AddAssetAsync(UserId, new AddAssetRequest
         {
             Type = AssetType.Silver,
             Quantity = quantity,
             PurchaseRatePerGram = purchaseRatePerGram,
-            PurchaseDate = purchaseDate != null ? DateTime.Parse(purchaseDate) : null
+            PurchaseDate = purchaseDate == null ? DateTime.Now : DateTime.Parse(purchaseDate)
         });
         DataChanged = true;
-        return $"Silver asset added: {asset.Quantity}g at ?{asset.PurchaseRatePerGram}/g (ID: {asset.Id})";
+        return $"Silver asset added: {asset.Quantity}g at ?{asset.PurchaseRatePerGram}/g on {asset.PurchaseDate:yyyy-MM-dd} (ID: {asset.Id})";
     }
 
     [KernelFunction("add_fd")]
-    [Description("Create a fixed deposit with principal amount, interest rate, tenure, and bank name")]
+    [Description("Create a fixed deposit. IMPORTANT: Do NOT call this unless the user has explicitly stated ALL of: principal amount, interest rate, tenure, and bank name. If ANY of these values is missing from the user's message, you MUST ask the user for the missing values before calling this function. Never guess or assume values.")]
     public async Task<string> AddFdAsync(
-        [Description("Principal amount in INR (e.g., 200000)")] decimal amount,
-        [Description("Annual interest rate in percent (e.g., 7.5)")] decimal interestRate,
-        [Description("Tenure in months (e.g., 12, 18, 24)")] int tenureMonths,
-        [Description("Bank name (e.g., HDFC, SBI, Union Bank)")] string bankName,
-        [Description("Goal or purpose (e.g., Emergency Fund). Optional.")] string? goal = null,
-        [Description("Additional notes. Optional.")] string? notes = null,
-        [Description("Booking date in YYYY-MM-DD format. Defaults to today if not provided.")] string? purchaseDate = null)
+        [Description("Principal amount in INR as stated by user (e.g., 200000). Must be provided by user.")] decimal amount,
+        [Description("Annual interest rate in percent as stated by user (e.g., 7.5). Must be provided by user.")] decimal interestRate,
+        [Description("Tenure in months as stated by user (e.g., 12, 18, 24). Must be provided by user.")] int tenureMonths,
+        [Description("Bank name as stated by user (e.g., HDFC, SBI). Must be provided by user.")] string bankName,
+        [Description("Goal or purpose if stated by user. Optional — only include if user mentioned it.")] string? goal = null,
+        [Description("Additional notes if stated by user. Optional — only include if user mentioned it.")] string? notes = null,
+        [Description("Booking date in YYYY-MM-DD format as stated by user. Must be provided by user — never default to today.")] string purchaseDate = "")
     {
         var asset = await _assetService.AddAssetAsync(UserId, new AddAssetRequest
         {
@@ -108,7 +112,7 @@ public class AssetsPlugin
             BankName = bankName,
             Goal = goal ?? string.Empty,
             Notes = notes ?? string.Empty,
-            PurchaseDate = purchaseDate != null ? DateTime.Parse(purchaseDate) : null
+            PurchaseDate = !string.IsNullOrWhiteSpace(purchaseDate) ? DateTime.Parse(purchaseDate) : null
         });
         DataChanged = true;
         return $"FD added: ?{asset.Amount} at {asset.InterestRate}% for {asset.TenureMonths} months in {asset.BankName} (ID: {asset.Id})";
