@@ -26,17 +26,26 @@ builder.Services.AddHttpClient<IPriceProvider, MetalPriceProvider>();
 // Semantic Kernel AI (ChatService + plugins)
 builder.Services.AddFinTrackAI();
 
-// CORS for Angular frontend (localhost:4200)
+// CORS — allow Angular frontend from any environment
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:4200",
-                "https://localhost:4200",
-                "http://localhost",
-                "http://localhost:80"
-              )
+        // Read additional origins from config/env: CORS__Origins = "https://example.com,https://other.com"
+        var extraOrigins = builder.Configuration["CORS:Origins"]?
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ?? [];
+
+        var origins = new List<string>
+        {
+            "http://localhost:4200",
+            "https://localhost:4200",
+            "http://localhost",
+            "http://localhost:80"
+        };
+        origins.AddRange(extraOrigins);
+
+        policy.WithOrigins([.. origins])
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -46,7 +55,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
@@ -56,11 +65,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAngular");
-
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
 
 app.UseAuthorization();
 app.MapControllers();
