@@ -3,10 +3,11 @@ using FinTrack.Interfaces;
 using FinTrack.Providers;
 using FinTrack.Services;
 using FinTrack.Storage;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Railway port binding
+// Railway/Render port binding
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
@@ -33,30 +34,28 @@ builder.Services.AddFinTrackAI();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAngular", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
-        var extraOrigins = builder.Configuration["CORS:Origins"]?
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            ?? [];
-
-        var origins = new List<string>
-        {
-            "http://localhost:4200",
-            "https://localhost:4200",
-            "http://localhost",
-            "http://localhost:80"
-        };
-
-        origins.AddRange(extraOrigins);
-
-        policy.WithOrigins([.. origins])
+        policy.AllowAnyOrigin()
               .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowAnyMethod();
     });
 });
 
+// Forward headers from Render's reverse proxy (HTTPS termination)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 var app = builder.Build();
+
+// Must be first — tells ASP.NET the original request was HTTPS
+// so Swagger/OpenAPI generates https:// URLs, not http://
+app.UseForwardedHeaders();
+app.UseHttpsRedirection();
 
 // Swagger
 app.MapOpenApi();
@@ -65,7 +64,7 @@ app.UseSwaggerUI(options =>
     options.SwaggerEndpoint("/openapi/v1.json", "FinTrack API");
 });
 
-app.UseCors("AllowAngular");
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 app.MapControllers();
