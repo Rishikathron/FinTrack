@@ -1,30 +1,35 @@
 # See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
-
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+# Copy all project files first for layer caching
 COPY ["FinTrack/FinTrack.csproj", "FinTrack/"]
-RUN dotnet restore "./FinTrack/FinTrack.csproj"
+COPY ["FinTrack.Core/FinTrack.Core.csproj", "FinTrack.Core/"]
+COPY ["FinTrack.AI/FinTrack.AI.csproj", "FinTrack.AI/"]
+RUN dotnet restore "FinTrack/FinTrack.csproj"
+
+# Copy everything and build
 COPY . .
 WORKDIR "/src/FinTrack"
-RUN dotnet build "./FinTrack.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet publish "FinTrack.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-# This stage is used to publish the service project to be copied to the final stage
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./FinTrack.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
-FROM base AS final
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+# Create AppData directory for JSON storage
+RUN mkdir -p /app/AppData
+
+COPY --from=build /app/publish .
+
+# Copy seed data from the build stage (source files only exist there)
+COPY --from=build /src/FinTrack/AppData/*.json /app/AppData/
+
+ENV ASPNETCORE_URLS=http://+:8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+EXPOSE 8080
+
 ENTRYPOINT ["dotnet", "FinTrack.dll"]

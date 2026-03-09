@@ -65,6 +65,7 @@ fintrack-ui/.angular/
 # Docker
 # ----------------
 **/docker-compose*.override.yml
+.env
 
 # ----------------
 # OS Files

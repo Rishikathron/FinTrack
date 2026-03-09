@@ -61,7 +61,7 @@ public class AssetsPlugin
     public async Task<string> AddGoldAsync(
         [Description("Weight in grams as stated by the user (e.g., 8, 10.5).IMPORTANT: Must be provided by user.")] decimal quantity,
         [Description("Purchase rate in INR per gram as stated. IMPORTANT: must be provided by user — never assume or guess this value.")] decimal purchaseRatePerGram,
-        [Description("Purchase date in YYYY-MM-DD format as stated by the user. Must be provided by user")] string purchaseDate)
+        [Description("Purchase date as stated by the user. Must be provided by user if he mentions today Take todays date")] string purchaseDate)
     {
         var asset = await _assetService.AddAssetAsync(UserId, new AddAssetRequest
         {

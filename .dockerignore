@@ -21,6 +21,10 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
+**/fintrack-ui/node_modules
+**/fintrack-ui/.angular
+**/fintrack-ui/dist
+**/.angular
 LICENSE
 README.md
 !**/.gitignore

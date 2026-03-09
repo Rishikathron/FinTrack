@@ -1,0 +1,56 @@
+services:
+  # .NET API (backend) -- Production: OpenRouter AI
+  api:
+    image: fintrack-api:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: FinTrack/Dockerfile
+    container_name: fintrack-api
+    ports:
+      - "8080:8080"
+    volumes:
+      - appdata:/app/AppData
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - SemanticKernel__Environment=Production
+      - SemanticKernel__Provider=Multi
+      - SemanticKernel__LocalFallback=false
+      - SemanticKernel__OpenRouter__ApiKey=${OPENROUTER_API_KEY}
+    restart: unless-stopped
+
+  # Angular UI (frontend via nginx)
+  ui:
+    image: fintrack-ui:${TAG:-latest}
+    build:
+      context: ./fintrack-ui
+      dockerfile: Dockerfile
+    container_name: fintrack-ui
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # Telegram Bot -- Production: OpenRouter AI
+  telegram:
+    image: fintrack-telegram:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: FinTrack.Telegram/Dockerfile
+    container_name: fintrack-telegram
+    volumes:
+      - appdata:/app/AppData
+    environment:
+      - DOTNET_ENVIRONMENT=Production
+      - Telegram__BotToken=${TELEGRAM_BOT_TOKEN}
+      - SemanticKernel__Environment=Production
+      - SemanticKernel__Provider=Multi
+      - SemanticKernel__LocalFallback=false
+      - SemanticKernel__OpenRouter__ApiKey=${OPENROUTER_API_KEY}
+    depends_on:
+      - api
+    restart: unless-stopped
+
+# Shared volume for JSON data
+volumes:
+  appdata:
