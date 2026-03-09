@@ -38,8 +38,6 @@ services:
       context: .
       dockerfile: FinTrack.Telegram/Dockerfile
     container_name: fintrack-telegram
-    volumes:
-      - appdata:/app/AppData
     environment:
       - DOTNET_ENVIRONMENT=Production
       - Telegram__BotToken=${TELEGRAM_BOT_TOKEN}
@@ -47,6 +45,7 @@ services:
       - SemanticKernel__Provider=Multi
       - SemanticKernel__LocalFallback=false
       - SemanticKernel__OpenRouter__ApiKey=${OPENROUTER_API_KEY}
+      - API_URL=http://api:8080
     depends_on:
       - api
     restart: unless-stopped
