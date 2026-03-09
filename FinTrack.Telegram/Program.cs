@@ -35,8 +35,7 @@ var allowedUserIds = config.GetSection("Telegram:AllowedUserIds").Get<long[]>() 
 
 //// Resolve services — use HTTP-backed services if API_URL is set (production/Render),
 //// otherwise use local file-based services (local dev)
-//var apiUrl = config["API_URL"] ?? Environment.GetEnvironmentVariable("API_URL");
-var apiUrl = "https://fintrack-api-23op.onrender.com/";
+var apiUrl = config["API_URL"] ?? Environment.GetEnvironmentVariable("API_URL");
 IAssetService assetService;
 IValuationService valuationService;
 IPriceProvider priceProvider;
