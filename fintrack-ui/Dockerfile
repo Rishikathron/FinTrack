@@ -14,8 +14,8 @@ FROM nginx:alpine AS final
 # Copy built Angular app
 COPY --from=build /app/dist/fintrack-ui/browser /usr/share/nginx/html
 
-# Custom nginx config to proxy /api to the backend
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Custom nginx config (copy from build stage to work with any build context)
+COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
