@@ -6,32 +6,35 @@ using FinTrack.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Railway port binding
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
+// Add services
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// Caching for metal prices
+// Caching
 builder.Services.AddMemoryCache();
 
 // Storage
 builder.Services.AddSingleton<JsonFileRepository>();
 
-// Services (clean interfaces for Phase 2 Semantic Kernel compatibility)
+// Services
 builder.Services.AddScoped<IAssetService, AssetService>();
 builder.Services.AddScoped<IValuationService, ValuationService>();
 
-// Price provider with HttpClient
+// Price provider
 builder.Services.AddHttpClient<IPriceProvider, MetalPriceProvider>();
 
-// Semantic Kernel AI (ChatService + plugins)
+// Semantic Kernel AI
 builder.Services.AddFinTrackAI();
 
-// CORS — allow Angular frontend from any environment
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        // Read additional origins from config/env: CORS__Origins = "https://example.com,https://other.com"
         var extraOrigins = builder.Configuration["CORS:Origins"]?
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             ?? [];
@@ -43,6 +46,7 @@ builder.Services.AddCors(options =>
             "http://localhost",
             "http://localhost:80"
         };
+
         origins.AddRange(extraOrigins);
 
         policy.WithOrigins([.. origins])
@@ -54,20 +58,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+// Swagger
+app.MapOpenApi();
+app.UseSwaggerUI(options =>
 {
-    app.MapOpenApi();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/openapi/v1.json", "FinTrack API");
-    });
-}
+    options.SwaggerEndpoint("/openapi/v1.json", "FinTrack API");
+});
 
 app.UseCors("AllowAngular");
 
 app.UseAuthorization();
 app.MapControllers();
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 app.Run();
