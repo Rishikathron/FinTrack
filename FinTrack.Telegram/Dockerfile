@@ -17,12 +17,9 @@ RUN dotnet publish "FinTrack.Telegram.csproj" -c $BUILD_CONFIGURATION -o /app/pu
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# Shared AppData volume
+# Shared AppData volume (app handles empty folder gracefully)
 RUN mkdir -p /app/AppData
 
 COPY --from=build /app/publish .
-
-# Copy seed data from the build stage (source files only exist there)
-COPY --from=build /src/FinTrack/AppData/*.json /app/AppData/
 
 ENTRYPOINT ["dotnet", "FinTrack.Telegram.dll"]

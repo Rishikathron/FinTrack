@@ -20,13 +20,10 @@ RUN dotnet publish "FinTrack.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# Create AppData directory for JSON storage
+# Create AppData directory for JSON storage (app handles empty folder gracefully)
 RUN mkdir -p /app/AppData
 
 COPY --from=build /app/publish .
-
-# Copy seed data from the build stage (source files only exist there)
-COPY --from=build /src/FinTrack/AppData/*.json /app/AppData/
 
 ENV ASPNETCORE_URLS=http://+:8080
 ENV ASPNETCORE_ENVIRONMENT=Production
