@@ -1,3 +1,3 @@
 export const environment = {
-  apiBaseUrl: '/api'
+  apiBaseUrl: 'https://fintrack-api-23op.onrender.com/api'
 };
