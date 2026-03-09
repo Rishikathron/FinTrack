@@ -2,10 +2,10 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-COPY package*.json ./
+COPY fintrack-ui/package*.json ./
 RUN npm ci
 
-COPY . .
+COPY fintrack-ui/ .
 RUN npx ng build --configuration production
 
 # ── Serve stage (nginx) ──

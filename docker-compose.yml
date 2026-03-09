@@ -22,8 +22,8 @@ services:
   ui:
     image: fintrack-ui:${TAG:-latest}
     build:
-      context: ./fintrack-ui
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: fintrack-ui/Dockerfile
     container_name: fintrack-ui
     ports:
       - "80:80"
